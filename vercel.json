@@ -11,10 +11,5 @@
       "src": "/(.*)",
       "dest": "run_dashboard.py"
     }
-  ],
-  "functions": {
-    "run_dashboard.py": {
-      "runtime": "python3.11"
-    }
-  }
+  ]
 }
