@@ -1,0 +1,56 @@
+# Files / directories that should NOT be copied into the build context.
+# Smaller context = faster `docker build`.
+
+.git
+.gitignore
+.github
+.venv
+venv/
+env/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+
+# Local dev artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local data (use volumes at runtime instead)
+database/*.db
+threat_intel/cache.db
+logs/*.log
+logs/socshield.log
+logs/service.log
+logs/supervisor.log
+reports/incidents/*
+reports/mitre_coverage.json
+docs/mitre_coverage.md
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Backup / test scratch
+scripts/__pycache__/
+tests/
+tmp/
+*.tmp
+*.bak
+
+# This file itself
+.dockerignore
+Dockerfile
+docker-compose.yml

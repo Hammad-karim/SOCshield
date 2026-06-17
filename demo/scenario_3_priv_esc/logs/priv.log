@@ -1,0 +1,4 @@
+2026-06-18 12:00:00 INFO  auditd privlog: ready
+2026-06-18 12:00:10 WARN  audit SUID_SET binary=/usr/bin/find host=10.0.0.99 actor=svcuser reason=unknown
+2026-06-18 12:00:25 WARN  audit SUDOERS_MODIFIED file=/etc/sudoers host=10.0.0.99 actor=svcuser added_user=root
+2026-06-18 12:00:42 WARN  audit ROOT_SHELL host=10.0.0.99 actor=svcuser method=su target=root

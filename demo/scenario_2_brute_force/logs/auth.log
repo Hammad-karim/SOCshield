@@ -1,0 +1,8 @@
+2026-06-18 11:00:00 INFO  sshd service startup
+2026-06-18 11:00:00 INFO  sshd monitoring: ready
+2026-06-18 11:00:05 WARN  sshd Failed login user=root ip=198.51.100.22 method=password
+2026-06-18 11:00:09 WARN  sshd Failed login user=admin ip=198.51.100.22 method=password
+2026-06-18 11:00:13 WARN  sshd Failed login user=oracle ip=198.51.100.22 method=password
+2026-06-18 11:00:14 WARN  sshd Failed login user=test ip=198.51.100.22 method=password
+2026-06-18 11:00:20 WARN  sshd Failed login user=postgres ip=198.51.100.22 method=password
+2026-06-18 11:00:25 WARN  sshd Failed login user=ubuntu ip=198.51.100.22 method=password

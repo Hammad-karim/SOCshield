@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Incidents &middot; SOCshield{% endblock %}
+{% block page_title %}Incidents{% endblock %}
+{% block page_sub %}{{ incidents|length }} correlated campaign{{ '' if incidents|length == 1 else 's' }}{% endblock %}
+
+{% block content %}
+
+{% if incidents %}
+  <div class="incident-list">
+    {% for inc in incidents %}
+      <a class="incident-card" href="{{ url_for('web.incident_detail', incident_id=inc._id) }}">
+        <div class="ic-row1">
+          <span class="risk-badge risk-{{ inc.risk|lower }}">{{ inc.risk }}</span>
+          <span class="ic-ip">{{ inc.source_ip }}</span>
+          <span class="ic-time">{{ h.format_timestamp(inc.generated_at) }}</span>
+        </div>
+        <p class="ic-summary">{{ inc.summary }}</p>
+        <div class="ic-meta">Rule {{ inc.rule_id }} &middot; {{ inc.rule_name }} &middot; {{ inc.alerts|length }} alert{{ '' if inc.alerts|length == 1 else 's' }}</div>
+        <div class="ic-kc">
+          {% for step in inc.timeline[:8] %}
+            <span class="ic-kc-dot sev-{{ step.severity|lower }}" title="{{ step.detector }} ({{ step.severity }}) &middot; {{ step.timestamp }}"></span>
+          {% endfor %}
+          {% if inc.timeline|length > 8 %}
+            <span class="ic-kc-label">+{{ inc.timeline|length - 8 }}</span>
+          {% endif %}
+        </div>
+        <div class="ic-chips">
+          {% for tac in inc.mitre_tactics %}
+            <span class="chip chip-tactic" style="--tac-color: {{ h.tactic_color(tac) }}">{{ tac }}</span>
+          {% endfor %}
+          {% for tech in inc.mitre_techniques %}
+            <span class="chip chip-mitre">{{ tech }}</span>
+          {% endfor %}
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="panel">
+    <div class="panel-body">
+      <div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-shield"></i></div>
+        <p>No correlated incidents yet. Run the detection pipeline to generate incidents.</p>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

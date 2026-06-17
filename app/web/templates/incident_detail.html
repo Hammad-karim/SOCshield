@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Incident {{ incident.source_ip }} &middot; SOCshield{% endblock %}
+{% block page_title %}Incident &middot; <span class="mono">{{ incident.source_ip }}</span>{% endblock %}
+{% block page_sub %}Rule {{ incident.rule_id }} &middot; {{ incident.rule_name }} &middot; generated {{ h.format_timestamp(incident.generated_at) }}{% endblock %}
+{% block page_actions %}
+  <a class="btn btn-ghost" href="{{ url_for('web.incidents') }}"><i class="bi bi-arrow-left"></i> Incidents</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="panel">
+  <div class="panel-body incident-header">
+    <div class="ih-row1">
+      <span class="risk-badge risk-{{ incident.risk|lower }}">{{ incident.risk }}</span>
+      <h1>{{ incident.summary }}</h1>
+    </div>
+
+    <div class="kpi-strip">
+      <div class="ks-item">
+        <div class="ks-label">Alerts in chain</div>
+        <div class="ks-value">{{ incident.alerts|length }}</div>
+      </div>
+      <div class="ks-item">
+        <div class="ks-label">Tactics observed</div>
+        <div class="ks-value">{{ incident.mitre_tactics|length }}</div>
+      </div>
+      <div class="ks-item">
+        <div class="ks-label">Techniques observed</div>
+        <div class="ks-value">{{ incident.mitre_techniques|length }}</div>
+      </div>
+    </div>
+
+    <p class="narrative">{{ incident.narrative }}</p>
+
+    <div class="chips-row">
+      {% for tac in incident.mitre_tactics %}
+        <span class="chip chip-tactic" style="--tac-color: {{ h.tactic_color(tac) }}">{{ tac }}</span>
+      {% endfor %}
+      {% for tech in incident.mitre_techniques %}
+        <span class="chip chip-mitre">{{ tech }}</span>
+      {% endfor %}
+    </div>
+
+    {% if incident.attack_path %}
+    <div class="killchain">
+      Kill chain
+      {% for step in incident.attack_path %}
+        <span class="kc-step">{{ step }}</span>{% if not loop.last %}<span class="kc-arrow">&rarr;</span>{% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid grid-cols-2 mb-4">
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Attack chain</h2>
+        <div class="panel-sub">Ordered by time</div>
+      </div>
+      <span class="panel-meta">{{ incident.timeline|length }} step{{ '' if incident.timeline|length == 1 else 's' }}</span>
+    </div>
+    <div class="panel-body">
+      <ol class="timeline">
+        {% for step in incident.timeline %}
+          <li class="tl-item sev-{{ step.severity|lower }}">
+            <div class="tl-time">{{ h.format_timestamp(step.timestamp) }}</div>
+            <div class="tl-title">{{ step.title }}</div>
+            <div class="tl-meta">{{ h.detector_label(step.detector) }} &middot; <span class="sev-label sev-{{ step.severity|lower }}">{{ step.severity }}</span></div>
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Threat intelligence</h2>
+        <div class="panel-sub">AbuseIPDB + VirusTotal</div>
+      </div>
+      {% if threat_intel and threat_intel.malicious %}
+        <span class="risk-badge risk-critical">MALICIOUS</span>
+      {% elif threat_intel %}
+        <span class="risk-badge risk-low">CLEAN</span>
+      {% else %}
+        <span class="risk-badge risk-unknown">NO DATA</span>
+      {% endif %}
+    </div>
+    <div class="panel-body">
+      {% if threat_intel %}
+        <div class="ti-grid">
+          <div class="ti-cell">
+            <div class="ti-label">Abuse score</div>
+            <div class="ti-value">{{ h.abuse_score_label(threat_intel.abuse_score) }}</div>
+          </div>
+          <div class="ti-cell">
+            <div class="ti-label">Country</div>
+            <div class="ti-value">{{ threat_intel.country or '—' }}</div>
+          </div>
+          <div class="ti-cell">
+            <div class="ti-label">ISP</div>
+            <div class="ti-value">{{ threat_intel.isp or '—' }}</div>
+          </div>
+          <div class="ti-cell">
+            <div class="ti-label">Reports</div>
+            <div class="ti-value">{{ threat_intel.abuse_reports if threat_intel.abuse_reports is not none else '—' }}</div>
+          </div>
+          <div class="ti-cell">
+            <div class="ti-label">VT reputation</div>
+            <div class="ti-value">{{ threat_intel.reputation if threat_intel.reputation is not none else '—' }}</div>
+          </div>
+          <div class="ti-cell">
+            <div class="ti-label">VT malicious</div>
+            <div class="ti-value">{{ threat_intel.malicious_count if threat_intel.malicious_count is not none else '—' }}</div>
+          </div>
+          <div class="ti-cell">
+            <div class="ti-label">VT suspicious</div>
+            <div class="ti-value">{{ threat_intel.suspicious_count if threat_intel.suspicious_count is not none else '—' }}</div>
+          </div>
+          <div class="ti-cell">
+            <div class="ti-label">Sources</div>
+            <div class="ti-value">{{ threat_intel.sources|join(', ') if threat_intel.sources else '—' }}</div>
+          </div>
+        </div>
+        <div class="text-dim" style="font-size: 11px; margin-top: 12px; font-family: var(--font-mono);">
+          Fetched {{ h.format_timestamp(threat_intel.fetched_at) }}
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">No threat-intel cached for this IP. Run the pipeline with mock or real API keys to populate this section.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>Correlated alerts</h2>
+      <div class="panel-sub">All alerts in this campaign</div>
+    </div>
+    <span class="panel-meta">{{ incident.alerts|length }} record{{ '' if incident.alerts|length == 1 else 's' }}</span>
+  </div>
+  <div class="panel-body p-0">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Detector</th>
+            <th>Severity</th>
+            <th>MITRE</th>
+            <th>Title</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in incident.alerts %}
+            <tr>
+              <td class="text-dim mono">{{ h.format_timestamp(a.timestamp) }}</td>
+              <td>{{ h.detector_label(a.detector) }}</td>
+              <td class="sev-cell sev-{{ a.severity|lower }}"><span class="sev-label sev-{{ a.severity|lower }}">{{ a.severity }}</span></td>
+              <td>
+                {% if a.mitre_technique %}
+                  <span class="chip chip-mitre">{{ a.mitre_technique }}</span>
+                  <div class="text-dim" style="font-size: 11px; margin-top: 2px;">{{ a.mitre_tactic or '' }}</div>
+                {% else %}<span class="text-dim">&mdash;</span>{% endif %}
+              </td>
+              <td>{{ a.title }}</td>
+              <td class="truncate text-dim">{{ a.description }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

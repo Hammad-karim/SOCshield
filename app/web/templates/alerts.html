@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Alerts &middot; SOCshield{% endblock %}
+{% block page_title %}Alerts{% endblock %}
+{% block page_sub %}
+  {{ data.total }} alert{{ '' if data.total == 1 else 's' }}
+  {% if data.filters.severity %} &middot; severity = <span class="mono">{{ data.filters.severity }}</span>{% endif %}
+  {% if data.filters.search %} &middot; search = &ldquo;{{ data.filters.search }}&rdquo;{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<form class="filterbar" method="get" action="{{ url_for('web.alerts') }}">
+  <div class="field field-grow">
+    <span class="field-label">Search</span>
+    <input type="text" name="q" placeholder="IP, detector, title, description..."
+           value="{{ data.filters.search }}" autocomplete="off">
+  </div>
+  <div class="field">
+    <span class="field-label">Severity</span>
+    <select name="severity">
+      <option value="">All</option>
+      {% for s in severities %}
+        <option value="{{ s }}" {% if data.filters.severity == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <span class="field-label">Sort</span>
+    <select name="sort">
+      {% for col in sort_columns %}
+        <option value="{{ col }}" {% if data.filters.sort_by == col %}selected{% endif %}>{{ col.replace('_', ' ').title() }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <span class="field-label">Dir</span>
+    <select name="dir">
+      <option value="DESC" {% if data.filters.sort_dir == 'DESC' %}selected{% endif %}>DESC</option>
+      <option value="ASC"  {% if data.filters.sort_dir == 'ASC'  %}selected{% endif %}>ASC</option>
+    </select>
+  </div>
+  <div class="filterbar-actions">
+    <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Apply</button>
+    <a class="btn btn-ghost" href="{{ url_for('web.alerts') }}">Reset</a>
+  </div>
+</form>
+
+<div class="panel">
+  <div class="panel-body p-0">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Source IP</th>
+            <th>Detector</th>
+            <th>Severity</th>
+            <th>MITRE Technique</th>
+            <th>MITRE Tactic</th>
+            <th>Title</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in data.rows %}
+            <tr>
+              <td class="text-dim mono">{{ h.format_timestamp(a.timestamp) }}</td>
+              <td><code>{{ a.source_ip }}</code></td>
+              <td>{{ h.detector_label(a.detector) }}</td>
+              <td class="sev-cell sev-{{ a.severity|lower }}"><span class="sev-label sev-{{ a.severity|lower }}">{{ a.severity }}</span></td>
+              <td>
+                {% if a.mitre_technique %}
+                  <span class="chip chip-mitre">{{ a.mitre_technique }}</span>
+                {% else %}<span class="text-dim">&mdash;</span>{% endif %}
+              </td>
+              <td>
+                {% if a.mitre_tactic %}
+                  <span class="chip chip-tactic" style="--tac-color: {{ h.tactic_color(a.mitre_tactic) }}">{{ a.mitre_tactic }}</span>
+                {% else %}<span class="text-dim">&mdash;</span>{% endif %}
+              </td>
+              <td class="truncate">{{ a.title }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="7"><div class="empty-state"><div class="empty-icon"><i class="bi bi-search"></i></div><p>No alerts match the current filters.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% if data.pages > 1 %}
+<nav class="pager">
+  {% if data.page > 1 %}
+    <a href="{{ url_for('web.alerts', page=data.page-1, q=data.filters.search, severity=data.filters.severity, sort=data.filters.sort_by, dir=data.filters.sort_dir) }}">&larr; Prev</a>
+  {% else %}
+    <span class="pager-disabled">&larr; Prev</span>
+  {% endif %}
+  {% for p in range(1, data.pages + 1) %}
+    {% if p == 1 or p == data.pages or (p >= data.page - 2 and p <= data.page + 2) %}
+      {% if p == data.page %}
+        <span class="pager-current">{{ p }}</span>
+      {% else %}
+        <a href="{{ url_for('web.alerts', page=p, q=data.filters.search, severity=data.filters.severity, sort=data.filters.sort_by, dir=data.filters.sort_dir) }}">{{ p }}</a>
+      {% endif %}
+    {% elif p == data.page - 3 or p == data.page + 3 %}
+      <span class="pager-ellipsis">&hellip;</span>
+    {% endif %}
+  {% endfor %}
+  {% if data.page < data.pages %}
+    <a href="{{ url_for('web.alerts', page=data.page+1, q=data.filters.search, severity=data.filters.severity, sort=data.filters.sort_by, dir=data.filters.sort_dir) }}">Next &rarr;</a>
+  {% else %}
+    <span class="pager-disabled">Next &rarr;</span>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% endblock %}

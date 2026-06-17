@@ -1,0 +1,9 @@
+2026-06-18 10:00:05 INFO  kernel ACCEPT src=192.168.1.10 dst=10.0.0.5 dport=22 proto=tcp
+2026-06-18 10:00:06 INFO  kernel DROP   src=203.0.113.50 dst=10.0.0.5 dport=22 proto=tcp flags=S
+2026-06-18 10:00:06 INFO  kernel DROP   src=203.0.113.50 dst=10.0.0.5 dport=23 proto=tcp flags=S
+2026-06-18 10:00:07 INFO  kernel DROP   src=203.0.113.50 dst=10.0.0.5 dport=25 proto=tcp flags=S
+2026-06-18 10:00:07 INFO  kernel DROP   src=203.0.113.50 dst=10.0.0.5 dport=53 proto=tcp flags=S
+2026-06-18 10:00:08 INFO  kernel DROP   src=203.0.113.50 dst=10.0.0.5 dport=80 proto=tcp flags=S
+2026-06-18 10:00:08 INFO  kernel DROP   src=203.0.113.50 dst=10.0.0.5 dport=443 proto=tcp flags=S
+2026-06-18 10:00:09 INFO  kernel DROP   src=203.0.113.50 dst=10.0.0.5 dport=8080 proto=tcp flags=S
+2026-06-18 10:00:09 INFO  kernel DROP   src=203.0.113.50 dst=10.0.0.5 dport=8443 proto=tcp flags=S

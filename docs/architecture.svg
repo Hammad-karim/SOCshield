@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" font-family="Inter, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0e1a"/>
+      <stop offset="1" stop-color="#06090f"/>
+    </linearGradient>
+    <linearGradient id="box" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="1" stop-color="#0a0e1a"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#00d4ff"/>
+    </marker>
+    <style>
+      .title { fill: #f3f4f6; font-size: 24px; font-weight: 700; }
+      .subtitle { fill: #94a3b8; font-size: 14px; }
+      .label { fill: #e5e7eb; font-size: 15px; font-weight: 600; }
+      .sub { fill: #94a3b8; font-size: 12px; }
+      .tag { fill: #67e8f9; font-size: 10px; font-family: monospace; }
+      .box { fill: url(#box); stroke: #1f2937; stroke-width: 1.5; }
+      .accent { stroke: #00d4ff; stroke-width: 2; }
+      .flow { stroke: #00d4ff; stroke-width: 2; fill: none; opacity: 0.8; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="720" fill="url(#bg)"/>
+
+  <text x="600" y="44" text-anchor="middle" class="title">SOCshield — Architecture</text>
+  <text x="600" y="68" text-anchor="middle" class="subtitle">Logs → Detectors → Alerts → Correlator → Threat Intel → Database → Dashboard</text>
+
+  <!-- Row 1: Logs -->
+  <g>
+    <rect class="box" x="40" y="110" width="160" height="90" rx="10"/>
+    <text x="120" y="142" text-anchor="middle" class="label">Logs</text>
+    <text x="120" y="164" text-anchor="middle" class="sub">auth.log</text>
+    <text x="120" y="180" text-anchor="middle" class="sub">firewall.log</text>
+    <text x="120" y="194" text-anchor="middle" class="sub">priv.log</text>
+    <text x="120" y="220" text-anchor="middle" class="tag">INGEST</text>
+  </g>
+
+  <!-- Row 1: Detectors -->
+  <g>
+    <rect class="box accent" x="260" y="110" width="180" height="90" rx="10"/>
+    <text x="350" y="142" text-anchor="middle" class="label">Detectors</text>
+    <text x="350" y="164" text-anchor="middle" class="sub">Brute Force</text>
+    <text x="350" y="180" text-anchor="middle" class="sub">Port Scan</text>
+    <text x="350" y="194" text-anchor="middle" class="sub">Privilege Escalation</text>
+    <text x="350" y="220" text-anchor="middle" class="tag">DETECT</text>
+  </g>
+
+  <!-- Row 1: Alerts -->
+  <g>
+    <rect class="box" x="500" y="110" width="160" height="90" rx="10"/>
+    <text x="580" y="142" text-anchor="middle" class="label">Alerts</text>
+    <text x="580" y="164" text-anchor="middle" class="sub">shared model</text>
+    <text x="580" y="180" text-anchor="middle" class="sub">LOW → CRITICAL</text>
+    <text x="580" y="194" text-anchor="middle" class="sub">MITRE tagged</text>
+    <text x="580" y="220" text-anchor="middle" class="tag">EMIT</text>
+  </g>
+
+  <!-- Row 1: Correlator -->
+  <g>
+    <rect class="box accent" x="720" y="110" width="200" height="90" rx="10"/>
+    <text x="820" y="142" text-anchor="middle" class="label">Correlator</text>
+    <text x="820" y="164" text-anchor="middle" class="sub">Rules A · B · C</text>
+    <text x="820" y="180" text-anchor="middle" class="sub">group by source_ip</text>
+    <text x="820" y="194" text-anchor="middle" class="sub">multi-stage chains</text>
+    <text x="820" y="220" text-anchor="middle" class="tag">CORRELATE</text>
+  </g>
+
+  <!-- Row 1: Campaigns -->
+  <g>
+    <rect class="box" x="980" y="110" width="180" height="90" rx="10"/>
+    <text x="1070" y="142" text-anchor="middle" class="label">Campaigns</text>
+    <text x="1070" y="164" text-anchor="middle" class="sub">risk-scored</text>
+    <text x="1070" y="180" text-anchor="middle" class="sub">narrative</text>
+    <text x="1070" y="194" text-anchor="middle" class="sub">timeline</text>
+    <text x="1070" y="220" text-anchor="middle" class="tag">CAMPAIGN</text>
+  </g>
+
+  <!-- Arrows row 1 -->
+  <path class="flow" d="M200 155 L260 155" marker-end="url(#arrow)"/>
+  <path class="flow" d="M440 155 L500 155" marker-end="url(#arrow)"/>
+  <path class="flow" d="M660 155 L720 155" marker-end="url(#arrow)"/>
+  <path class="flow" d="M920 155 L980 155" marker-end="url(#arrow)"/>
+
+  <!-- Row 2: Threat Intel -->
+  <g>
+    <rect class="box" x="720" y="320" width="200" height="90" rx="10"/>
+    <text x="820" y="352" text-anchor="middle" class="label">Threat Intel</text>
+    <text x="820" y="374" text-anchor="middle" class="sub">AbuseIPDB · VirusTotal</text>
+    <text x="820" y="390" text-anchor="middle" class="sub">cached · 24h TTL</text>
+    <text x="820" y="404" text-anchor="middle" class="sub">mock-mode supported</text>
+    <text x="820" y="430" text-anchor="middle" class="tag">ENRICH</text>
+  </g>
+
+  <!-- Row 2: Database -->
+  <g>
+    <rect class="box accent" x="940" y="320" width="220" height="90" rx="10"/>
+    <text x="1050" y="352" text-anchor="middle" class="label">SQLite Database</text>
+    <text x="1050" y="374" text-anchor="middle" class="sub">alerts.db</text>
+    <text x="1050" y="390" text-anchor="middle" class="sub">threat_intel/cache.db</text>
+    <text x="1050" y="404" text-anchor="middle" class="sub">incident_*.json reports</text>
+    <text x="1050" y="430" text-anchor="middle" class="tag">PERSIST</text>
+  </g>
+
+  <!-- Arrow correlator -> threat intel -->
+  <path class="flow" d="M820 200 L820 320" marker-end="url(#arrow)"/>
+  <!-- Arrow threat intel -> db -->
+  <path class="flow" d="M920 365 L940 365" marker-end="url(#arrow)"/>
+
+  <!-- Row 2: Orchestrator (left) -->
+  <g>
+    <rect class="box" x="40" y="320" width="200" height="90" rx="10"/>
+    <text x="140" y="352" text-anchor="middle" class="label">Orchestrator</text>
+    <text x="140" y="374" text-anchor="middle" class="sub">run_pipeline()</text>
+    <text x="140" y="390" text-anchor="middle" class="sub">merges alerts</text>
+    <text x="140" y="404" text-anchor="middle" class="sub">writes to DB</text>
+    <text x="140" y="430" text-anchor="middle" class="tag">PIPELINE</text>
+  </g>
+
+  <path class="flow" d="M140 200 L140 320" marker-end="url(#arrow)"/>
+  <path class="flow" d="M240 365 L940 365" marker-end="url(#arrow)"/>
+
+  <!-- Row 2: Dashboard -->
+  <g>
+    <rect class="box accent" x="260" y="500" width="900" height="160" rx="12"/>
+    <text x="710" y="535" text-anchor="middle" class="label" style="font-size:20px;">SOC Analyst Dashboard — Flask</text>
+    <text x="710" y="560" text-anchor="middle" class="subtitle">app/web/ — Blueprints, Bootstrap 5 dark theme, Chart.js</text>
+
+    <g transform="translate(290, 580)">
+      <rect width="120" height="60" rx="8" fill="#0a0e1a" stroke="#1f2937"/>
+      <text x="60" y="32" text-anchor="middle" class="label">/</text>
+      <text x="60" y="50" text-anchor="middle" class="sub">Dashboard</text>
+    </g>
+    <g transform="translate(430, 580)">
+      <rect width="120" height="60" rx="8" fill="#0a0e1a" stroke="#1f2937"/>
+      <text x="60" y="32" text-anchor="middle" class="label">/alerts</text>
+      <text x="60" y="50" text-anchor="middle" class="sub">search · sort</text>
+    </g>
+    <g transform="translate(570, 580)">
+      <rect width="120" height="60" rx="8" fill="#0a0e1a" stroke="#1f2937"/>
+      <text x="60" y="32" text-anchor="middle" class="label">/incidents</text>
+      <text x="60" y="50" text-anchor="middle" class="sub">correlated</text>
+    </g>
+    <g transform="translate(710, 580)">
+      <rect width="120" height="60" rx="8" fill="#0a0e1a" stroke="#1f2937"/>
+      <text x="60" y="32" text-anchor="middle" class="label">/incident/&lt;id&gt;</text>
+      <text x="60" y="50" text-anchor="middle" class="sub">analyst view</text>
+    </g>
+    <g transform="translate(850, 580)">
+      <rect width="120" height="60" rx="8" fill="#0a0e1a" stroke="#1f2937"/>
+      <text x="60" y="32" text-anchor="middle" class="label">/threat-intel</text>
+      <text x="60" y="50" text-anchor="middle" class="sub">reputation</text>
+    </g>
+    <g transform="translate(990, 580)">
+      <rect width="120" height="60" rx="8" fill="#0a0e1a" stroke="#1f2937"/>
+      <text x="60" y="32" text-anchor="middle" class="label">/mitre</text>
+      <text x="60" y="50" text-anchor="middle" class="sub">ATT&amp;CK matrix</text>
+    </g>
+  </g>
+
+  <!-- arrows from db to dashboard -->
+  <path class="flow" d="M1050 410 L1050 460 L710 460 L710 500" marker-end="url(#arrow)"/>
+  <path class="flow" d="M1050 410 L1050 460 L1050 480" stroke="none"/>
+  <text x="780" y="478" class="sub">read-only consumption</text>
+
+  <!-- footer -->
+  <text x="600" y="700" text-anchor="middle" class="sub">Dashboard consumes existing backend — no detection or correlation logic is modified.</text>
+</svg>

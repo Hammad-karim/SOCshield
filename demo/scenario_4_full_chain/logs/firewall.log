@@ -1,0 +1,7 @@
+2026-06-17 08:00:00 INFO  kernel monitoring: ready
+2026-06-17 08:15:10 INFO  kernel DROP   src=185.220.101.45 dst=10.0.0.5 dport=22  proto=tcp flags=S
+2026-06-17 08:15:10 INFO  kernel DROP   src=185.220.101.45 dst=10.0.0.5 dport=23  proto=tcp flags=S
+2026-06-17 08:15:10 INFO  kernel DROP   src=185.220.101.45 dst=10.0.0.5 dport=25  proto=tcp flags=S
+2026-06-17 08:15:10 INFO  kernel DROP   src=185.220.101.45 dst=10.0.0.5 dport=53  proto=tcp flags=S
+2026-06-17 08:15:10 INFO  kernel DROP   src=185.220.101.45 dst=10.0.0.5 dport=80  proto=tcp flags=S
+2026-06-17 08:15:10 INFO  kernel DROP   src=185.220.101.45 dst=10.0.0.5 dport=443 proto=tcp flags=S

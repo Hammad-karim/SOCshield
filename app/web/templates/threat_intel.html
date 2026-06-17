@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Threat intelligence &middot; SOCshield{% endblock %}
+{% block page_title %}Threat intelligence{% endblock %}
+{% block page_sub %}
+  {{ records|length }} IP{{ '' if records|length == 1 else 's' }} tracked
+  {% if filters.malicious_only %} &middot; malicious only{% endif %}
+  {% if filters.min_score != '' %} &middot; abuse &ge; {{ filters.min_score }}{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<form class="filterbar" method="get" action="{{ url_for('web.threat_intel') }}">
+  <div class="field field-grow">
+    <span class="field-label">Search</span>
+    <input type="text" name="q" placeholder="IP, country, ISP..." value="{{ filters.q }}" autocomplete="off">
+  </div>
+  <div class="field">
+    <span class="field-label">Country</span>
+    <select name="country">
+      <option value="">All</option>
+      {% for c in countries %}
+        <option value="{{ c }}" {% if filters.country == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <span class="field-label">Min score</span>
+    <input type="number" name="min_score" min="0" max="100" value="{{ filters.min_score }}" style="width: 80px;">
+  </div>
+  <label class="field-check">
+    <input type="checkbox" name="malicious" value="1" id="maliciousOnly" {% if filters.malicious_only %}checked{% endif %}>
+    Malicious only
+  </label>
+  <div class="filterbar-actions">
+    <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Apply</button>
+    <a class="btn btn-ghost" href="{{ url_for('web.threat_intel') }}">Reset</a>
+  </div>
+</form>
+
+<div class="panel">
+  <div class="panel-body p-0">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>IP</th>
+            <th>Status</th>
+            <th>Abuse Score</th>
+            <th>Reports</th>
+            <th>Country</th>
+            <th>ISP</th>
+            <th>VT Reputation</th>
+            <th>VT Malicious</th>
+            <th>Sources</th>
+            <th>Fetched</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+            <tr>
+              <td><code>{{ r.ip }}</code></td>
+              <td>
+                {% if r.malicious %}<span class="risk-badge risk-critical">MALICIOUS</span>
+                {% elif r.abuse_score is not none %}<span class="risk-badge risk-low">CLEAN</span>
+                {% else %}<span class="risk-badge risk-unknown">UNKNOWN</span>{% endif %}
+              </td>
+              <td>
+                {% if r.abuse_score is not none %}
+                  <span class="abuse-bar"><span class="abuse-fill" style="width: {{ r.abuse_score }}%; background: {{ h.severity_color('CRITICAL' if r.abuse_score >= 70 else ('HIGH' if r.abuse_score >= 40 else 'LOW')) }};"></span></span>
+                  <span class="mono">{{ r.abuse_score }}</span>
+                {% else %}<span class="text-dim">&mdash;</span>{% endif %}
+              </td>
+              <td class="mono">{{ r.abuse_reports if r.abuse_reports is not none else '—' }}</td>
+              <td class="mono">{{ r.country or '—' }}</td>
+              <td class="truncate">{{ r.isp or '—' }}</td>
+              <td class="mono">{{ r.reputation if r.reputation is not none else '—' }}</td>
+              <td class="mono">{{ r.malicious_count if r.malicious_count is not none else '—' }}</td>
+              <td>
+                {% for s in r.sources or [] %}
+                  <span class="chip">{{ s }}</span>
+                {% else %}&mdash;{% endfor %}
+              </td>
+              <td class="text-dim mono">{{ h.format_timestamp(r.fetched_at) }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="10"><div class="empty-state"><div class="empty-icon"><i class="bi bi-search"></i></div><p>No threat-intel records match the current filters.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

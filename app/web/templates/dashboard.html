@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}Overview &middot; SOCshield{% endblock %}
+{% block page_title %}Overview{% endblock %}
+{% block page_sub %}Real-time view of the detection pipeline &middot; auto-refresh 30s{% endblock %}
+{% block page_actions %}
+  <button class="btn btn-secondary" id="refreshNowBtn" type="button">
+    <i class="bi bi-arrow-clockwise"></i> Refresh
+  </button>
+  <a class="btn btn-primary" href="{{ url_for('web.alerts') }}">
+    All alerts <i class="bi bi-arrow-right"></i>
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<div class="kpi-row">
+  <div class="kpi">
+    <div class="kpi-label">Total alerts</div>
+    <div class="kpi-value" id="kpi-total">{{ summary.total_alerts }}</div>
+    <div class="kpi-foot">all severities</div>
+  </div>
+  <div class="kpi kpi-emphasis">
+    <div class="kpi-label">Critical</div>
+    <div class="kpi-value" id="kpi-critical">{{ summary.critical_alerts }}</div>
+    <div class="kpi-foot">immediate response</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Active attacker IPs</div>
+    <div class="kpi-value" id="kpi-active-ips">{{ summary.active_attacker_count }}</div>
+    <div class="kpi-foot">last 60 minutes</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Incidents</div>
+    <div class="kpi-value" id="kpi-incidents">{{ summary.incidents_generated }}</div>
+    <div class="kpi-foot">correlated campaigns</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">MITRE techniques</div>
+    <div class="kpi-value" id="kpi-mitre">
+      {{ summary.mitre_techniques_covered }}<span class="kpi-value-sub">/ {{ summary.mitre_total_techniques }}</span>
+    </div>
+    <div class="kpi-foot">ATT&amp;CK coverage</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Avg abuse score</div>
+    <div class="kpi-value" id="kpi-abuse">
+      {% if summary.average_abuse_score is not none %}{{ '%.1f'|format(summary.average_abuse_score) }}{% else %}&mdash;{% endif %}
+    </div>
+    <div class="kpi-foot">AbuseIPDB</div>
+  </div>
+</div>
+
+<div class="grid grid-cols-2 mb-4">
+  <div class="panel" style="grid-column: span 1;">
+    <div class="panel-head">
+      <div>
+        <h2>Alert volume</h2>
+        <div class="panel-sub">Hourly buckets</div>
+      </div>
+      <span class="panel-meta" id="kpi-active-ips-foot">{{ timeline|length }} buckets</span>
+    </div>
+    <div class="panel-body">
+      <canvas id="chartTimeline" height="120"></canvas>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Severity mix</h2>
+        <div class="panel-sub">All alerts</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <canvas id="chartSeverity" height="120"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-2 mb-4">
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Top source IPs</h2>
+        <div class="panel-sub">By alert count</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <canvas id="chartTopIps" height="140"></canvas>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Source geography</h2>
+        <div class="panel-sub">From threat-intel cache</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <canvas id="chartCountries" height="140"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-2 mb-4">
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Detections by tactic</h2>
+        <div class="panel-sub">MITRE ATT&amp;CK</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <canvas id="chartTactics" height="140"></canvas>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Detections by technique</h2>
+        <div class="panel-sub">MITRE ATT&amp;CK</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <canvas id="chartTechniques" height="140"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-2 mb-4">
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Recent alerts</h2>
+        <div class="panel-sub">Latest 8</div>
+      </div>
+      <a class="panel-meta" href="{{ url_for('web.alerts') }}">View all &rarr;</a>
+    </div>
+    <div class="panel-body p-0">
+      <div class="table-responsive">
+        <table class="data-table" id="recentAlertsTable">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Source IP</th>
+              <th>Detector</th>
+              <th>Severity</th>
+              <th>MITRE</th>
+              <th>Title</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in recent_alerts %}
+            <tr>
+              <td class="text-dim mono">{{ h.format_timestamp(a.timestamp) }}</td>
+              <td><code>{{ a.source_ip }}</code></td>
+              <td>{{ h.detector_label(a.detector) }}</td>
+              <td class="sev-cell sev-{{ a.severity|lower }}"><span class="sev-label sev-{{ a.severity|lower }}">{{ a.severity }}</span></td>
+              <td>
+                {% if a.mitre_technique %}
+                  <span class="chip chip-mitre">{{ a.mitre_technique }}</span>
+                  <div class="text-dim" style="font-size: 11px; margin-top: 2px;">{{ a.mitre_tactic or '' }}</div>
+                {% else %}<span class="text-dim">&mdash;</span>{% endif %}
+              </td>
+              <td class="truncate">{{ a.title }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6"><div class="empty-state"><div class="empty-icon"><i class="bi bi-inbox"></i></div><p>No alerts in the database yet.</p></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Recent incidents</h2>
+        <div class="panel-sub">Latest 5</div>
+      </div>
+      <a class="panel-meta" href="{{ url_for('web.incidents') }}">View all &rarr;</a>
+    </div>
+    <div class="panel-body p-0">
+      {% if recent_incidents %}
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Source IP</th>
+              <th>Risk</th>
+              <th>Rule</th>
+              <th>Alerts</th>
+              <th class="text-end">Generated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inc in recent_incidents %}
+              <tr>
+                <td><a href="{{ url_for('web.incident_detail', incident_id=inc._id) }}" style="font-family: var(--font-mono);">{{ inc.source_ip }}</a></td>
+                <td><span class="risk-badge risk-{{ inc.risk|lower }}">{{ inc.risk }}</span></td>
+                <td class="text-muted">Rule {{ inc.rule_id }}</td>
+                <td class="mono">{{ inc.alerts|length }}</td>
+                <td class="text-end text-dim mono">{{ h.format_timestamp(inc.generated_at) }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon"><i class="bi bi-shield"></i></div>
+          <p>No correlated incidents yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.SOC_DATA = {
+    timeline: {{ timeline|tojson }},
+    severity: {{ severity_distribution|tojson }},
+    topIps:   {{ top_ips|tojson }},
+    tactics:  {{ tactic_distribution|tojson }},
+    techniques: {{ technique_distribution|tojson }},
+    countries: {{ countries|tojson }},
+  };
+  SOCDashboard.initCharts();
+  SOCDashboard.startAutoRefresh(30000);
+</script>
+{% endblock %}

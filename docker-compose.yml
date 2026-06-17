@@ -1,0 +1,113 @@
+# ===================================================================
+# SOCshield — production compose
+# -------------------------------------------------------------------
+# - Single service: socshield (Flask dashboard + monitoring service
+#   in one process via app.supervisor)
+# - Three named volumes: data, logs, reports
+# - One internal-only bridge network
+# - env_file: ./.env (create from .env.example; do not commit)
+# - read_only: false on the persistent volumes (the app writes)
+# - user: "1000:1000" so host-side volume permissions are sane
+# - restart: unless-stopped
+# - healthcheck mirrors the Dockerfile's
+# ===================================================================
+
+version: "3.9"
+
+services:
+  socshield:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: socshield:latest
+    container_name: socshield
+    restart: unless-stopped
+
+    # UID/GID match the non-root user created in the Dockerfile.
+    user: "1000:1000"
+
+    # Bind to localhost on the host; remove the "127.0.0.1:" prefix to
+    # expose on all interfaces.
+    ports:
+      - "127.0.0.1:5000:5000"
+
+    env_file:
+      - .env
+
+    # Environment overrides for the persistent paths. The entrypoint
+    # also re-exports them, but defining them here makes `docker
+    # compose config` show the resolved values.
+    environment:
+      SOCSHIELD_DATA_DIR: /var/lib/socshield
+      SOCSHIELD_LOGS_DIR: /var/lib/socshield/logs
+      SOCSHIELD_REPORTS_DIR: /var/lib/socshield/reports
+      SOCSHIELD_DB_PATH: /var/lib/socshield/alerts.db
+      SOCSHIELD_TI_CACHE_PATH: /var/lib/socshield/threat_intel_cache.db
+      SOCSHIELD_AUTH_LOG: /var/lib/socshield/logs/auth.log
+      SOCSHIELD_FIREWALL_LOG: /var/lib/socshield/logs/firewall.log
+      SOCSHIELD_PRIV_LOG: /var/lib/socshield/logs/priv.log
+      FLASK_HOST: 0.0.0.0
+      FLASK_PORT: "5000"
+      FLASK_DEBUG: "0"
+      TZ: UTC
+
+    # Named volumes for persistence. Source paths inside the container
+    # are owned by the socshield user (1000:1000) after first start.
+    volumes:
+      - socshield_data:/var/lib/socshield
+      # Optional: bind-mount host log sources. Comment out if you
+      # don't have pre-existing auth/firewall/priv logs to feed.
+      # - /var/log/auth.log:/var/lib/socshield/logs/auth.log:ro
+      # - /var/log/firewall.log:/var/lib/socshield/logs/firewall.log:ro
+      # - /var/log/priv.log:/var/lib/socshield/logs/priv.log:ro
+
+    # Hardening: drop all capabilities except what we need. Flask +
+    # outbound HTTPS (for threat-intel) both work without caps in a
+    # default Docker setup, so we drop everything.
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+    # Resource limits — adjust per host capacity. Defaults are
+    # conservative; production should bump memory to 512m+.
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+    # Healthcheck — same semantics as the Dockerfile's, but visible
+    # to `docker compose ps`.
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+    # Isolated network — no other compose services can reach us by
+    # default; we only need ingress via the host port mapping above.
+    networks:
+      - socshield_net
+
+    # Logging driver: JSON to stdout/stderr; the entrypoint also
+    # writes a startup.log into the persistent logs volume.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  socshield_net:
+    driver: bridge
+    internal: false  # need outbound HTTPS for AbuseIPDB / VirusTotal
+
+volumes:
+  socshield_data:
+    name: socshield_data
+    driver: local

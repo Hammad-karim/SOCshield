@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}MITRE ATT&amp;CK coverage &middot; SOCshield{% endblock %}
+{% block page_title %}MITRE ATT&amp;CK coverage{% endblock %}
+{% block page_sub %}
+  {{ coverage.summary.techniques_covered }} of {{ coverage.summary.total_techniques }} techniques covered
+  {% if coverage.summary.coverage_ratio %} ({{ (coverage.summary.coverage_ratio * 100)|round(0)|int }}%){% endif %}
+  &middot; {{ coverage.summary.tactics_covered }} tactic{{ '' if coverage.summary.tactics_covered == 1 else 's' }}
+{% endblock %}
+
+{% block content %}
+
+<div class="kpi-row">
+  <div class="kpi">
+    <div class="kpi-label">Techniques covered</div>
+    <div class="kpi-value">{{ coverage.summary.techniques_covered }}<span class="kpi-value-sub">/ {{ coverage.summary.total_techniques }}</span></div>
+    <div class="kpi-foot">of catalog</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Tactics covered</div>
+    <div class="kpi-value">{{ coverage.summary.tactics_covered }}</div>
+    <div class="kpi-foot">distinct kill-chain stages</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Most common tactic</div>
+    <div class="kpi-value" style="font-size: 16px;">{{ coverage.summary.most_common_tactic or '—' }}</div>
+    <div class="kpi-foot">observed most often</div>
+  </div>
+  <div class="kpi kpi-emphasis">
+    <div class="kpi-label">Most common technique</div>
+    <div class="kpi-value" style="font-size: 16px;">{{ coverage.summary.most_common_technique or '—' }}</div>
+    <div class="kpi-foot">technique id</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Coverage ratio</div>
+    <div class="kpi-value">{{ (coverage.summary.coverage_ratio * 100) | round(0) | int if coverage.summary.coverage_ratio else 0 }}<span class="kpi-value-sub">%</span></div>
+    <div class="kpi-foot">techniques &divide; catalog</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Total observations</div>
+    <div class="kpi-value">
+      {% set total = coverage.summary.technique_frequency.values() | sum %}{{ total }}
+    </div>
+    <div class="kpi-foot">across all techniques</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>ATT&amp;CK matrix</h2>
+      <div class="panel-sub">Tactics &rarr; techniques</div>
+    </div>
+    <div class="panel-meta">Accent border = covered</div>
+  </div>
+  <div class="panel-body">
+    <div class="matrix">
+      {% for tactic, techniques in coverage.matrix.items() %}
+        <div class="matrix-tactic">
+          <div class="matrix-tactic-head" style="--tac-color: {{ h.tactic_color(tactic) }}">{{ tactic }}</div>
+          <div class="matrix-techniques">
+            {% for tech in techniques %}
+              <div class="matrix-tech {% if tech.covered %}covered{% else %}uncovered{% endif %}"
+                   title="{{ tech.technique_id }} — {{ tech.technique_name }} (observations: {{ tech.observations }})">
+                <div class="tech-id">{{ tech.technique_id }}</div>
+                <div class="tech-name">{{ tech.technique_name }}</div>
+                <div class="tech-obs">
+                  {% if tech.covered %}{{ tech.observations }} obs{% else %}not observed{% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-2 mb-4">
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Tactic frequency</h2>
+        <div class="panel-sub">Observation count</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <canvas id="chartTacticFreq" height="140"></canvas>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Technique frequency</h2>
+        <div class="panel-sub">Observation count</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <canvas id="chartTechFreq" height="140"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-2">
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Covered techniques</h2>
+        <div class="panel-sub">Observed in this run</div>
+      </div>
+      <span class="panel-meta">{{ coverage.summary.covered|length }}</span>
+    </div>
+    <div class="panel-body p-0">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Tactic</th>
+              <th class="text-end">Obs</th>
+              <th>Detectors</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in coverage.summary.covered %}
+              <tr>
+                <td><span class="chip chip-mitre">{{ row.technique_id }}</span></td>
+                <td>{{ row.technique_name }}</td>
+                <td><span class="chip chip-tactic" style="--tac-color: {{ h.tactic_color(row.tactic) }}">{{ row.tactic }}</span></td>
+                <td class="text-end mono">{{ row.observations }}</td>
+                <td>
+                  {% for d in row.contributing_detectors %}<span class="chip">{{ h.detector_label(d) }}</span>{% endfor %}
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="5"><div class="empty-state"><div class="empty-icon"><i class="bi bi-bullseye"></i></div><p>No techniques covered yet.</p></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Detection gaps</h2>
+        <div class="panel-sub">Not observed in this run</div>
+      </div>
+      <span class="panel-meta">{{ coverage.summary.uncovered|length }}</span>
+    </div>
+    <div class="panel-body p-0">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Tactic</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in coverage.summary.uncovered %}
+              <tr>
+                <td><span class="chip chip-mitre">{{ row.technique_id }}</span></td>
+                <td>{{ row.technique_name }}</td>
+                <td><span class="chip chip-tactic" style="--tac-color: {{ h.tactic_color(row.tactic) }}">{{ row.tactic }}</span></td>
+              </tr>
+            {% else %}
+              <tr><td colspan="3"><div class="empty-state"><div class="empty-icon"><i class="bi bi-check2-circle"></i></div><p>No detection gaps. Full catalog coverage.</p></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.SOC_MITRE = {
+    tacticFreq:    {{ coverage.summary.tactic_frequency|tojson }},
+    techniqueFreq: {{ coverage.summary.technique_frequency|tojson }},
+  };
+  SOCDashboard.initMitreCharts(
+    window.SOC_MITRE.tacticFreq,
+    window.SOC_MITRE.techniqueFreq
+  );
+</script>
+{% endblock %}
