@@ -30,7 +30,32 @@ if str(BASE_DIR) not in sys.path:
 
 # Allow deployment to relocate the threat-intel cache via env (Docker volume).
 _DEFAULT_CACHE = BASE_DIR / "threat_intel" / "cache.db"
-_CACHE_PATH: Path = Path(os.environ.get("SOCSHIELD_TI_CACHE_PATH", str(_DEFAULT_CACHE))).resolve()
+
+
+def _resolve_cache_path() -> Path:
+    """Resolve the threat-intel cache path lazily, falling back to a
+    writable location if the requested one is on a read-only filesystem.
+    """
+    raw = os.environ.get("SOCSHIELD_TI_CACHE_PATH", str(_DEFAULT_CACHE))
+    try:
+        p = Path(raw).resolve()
+        parent = p.parent
+        if parent.exists():
+            if not os.access(str(parent), os.W_OK):
+                raise OSError("read-only")
+        else:
+            try:
+                parent.mkdir(parents=True, exist_ok=True)
+            except (OSError, PermissionError):
+                raise OSError("read-only")
+        return p
+    except (OSError, PermissionError):
+        fallback = Path("/tmp/socshield/threat_intel_cache.db")
+        fallback.parent.mkdir(parents=True, exist_ok=True)
+        return fallback
+
+
+_CACHE_PATH: Path = _resolve_cache_path()
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS threat_intel_cache (
@@ -43,8 +68,13 @@ CREATE TABLE IF NOT EXISTS threat_intel_cache (
 
 
 def _connect() -> sqlite3.Connection:
-    """Open a SQLite connection with row dict access."""
-    _CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    """Open a SQLite connection with row dict access.
+
+    Resolves the cache path lazily so a read-only filesystem (e.g.
+    Vercel serverless) transparently falls back to `/tmp/socshield/`.
+    """
+    global _CACHE_PATH
+    _CACHE_PATH = _resolve_cache_path()
     conn = sqlite3.connect(str(_CACHE_PATH))
     conn.row_factory = sqlite3.Row
     return conn

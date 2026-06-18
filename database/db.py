@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -28,8 +29,44 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Resolution order:
 #   1. SOCSHIELD_DB_PATH (absolute path to a .db file)
 #   2. <repo>/database/alerts.db  (default, in-repo)
+#   3. /tmp/socshield/alerts.db  (serverless fallback when the
+#      resolved path is not writable — e.g. Vercel's read-only bundle)
 _DEFAULT_DB = BASE_DIR / "database" / "alerts.db"
-DB_PATH = Path(os.environ.get("SOCSHIELD_DB_PATH", str(_DEFAULT_DB))).resolve()
+
+
+def _resolve_db_path() -> Path:
+    """Resolve the SQLite path lazily, falling back to a writable
+    location if the requested one is on a read-only filesystem.
+
+    Called every time we open a connection, so an operator can flip the
+    env var at runtime without restarting the process.
+    """
+    raw = os.environ.get("SOCSHIELD_DB_PATH", str(_DEFAULT_DB))
+    try:
+        p = Path(raw).resolve()
+        # If the parent directory doesn't exist yet, check whether we
+        # can create it. If it does exist, check writability.
+        parent = p.parent
+        if parent.exists():
+            if not os.access(str(parent), os.W_OK):
+                raise OSError("read-only")
+        else:
+            # Try to create the parent; if it fails, fall back too.
+            try:
+                parent.mkdir(parents=True, exist_ok=True)
+            except (OSError, PermissionError):
+                raise OSError("read-only")
+        return p
+    except (OSError, PermissionError):
+        # Serverless / read-only FS — redirect to /tmp
+        fallback = Path("/tmp/socshield/alerts.db")
+        fallback.parent.mkdir(parents=True, exist_ok=True)
+        return fallback
+
+
+# Computed once at import time, but refreshed on every _connect() call
+# (see below) so env-var changes mid-process take effect.
+DB_PATH = _resolve_db_path()
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS alerts (
@@ -48,8 +85,13 @@ CREATE INDEX IF NOT EXISTS idx_alerts_sev ON alerts(severity);
 
 
 def _connect() -> sqlite3.Connection:
-    """Open a SQLite connection with row dict access."""
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    """Open a SQLite connection with row dict access.
+
+    Resolves the DB path lazily so a read-only filesystem (e.g. Vercel
+    serverless) transparently falls back to `/tmp/socshield/`.
+    """
+    global DB_PATH
+    DB_PATH = _resolve_db_path()
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     return conn
