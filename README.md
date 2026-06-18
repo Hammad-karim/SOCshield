@@ -213,6 +213,50 @@ Validate the deployment:
 
 Full deployment guide: [DEPLOYMENT.md](DEPLOYMENT.md).
 
+### Vercel (serverless, dashboard-only)
+
+A read-only dashboard is also deployable to [Vercel](https://vercel.com).
+The deployment uses the same Flask app as Docker but with managed
+Postgres (via Neon) for the alert store and threat-intel cache, since
+Vercel's serverless filesystem is read-only except `/tmp`.
+
+The dual-backend in `database/db.py` and `threat_intel/cache.py`
+auto-selects Postgres when `DATABASE_URL` is set; otherwise it falls
+back to the local SQLite file.
+
+**One-time setup:**
+
+1. Push the repo to GitHub (already done if you forked the original).
+2. In Vercel → **Add New Project**, import the repo, leave all
+   framework / build settings at their defaults — `vercel.json` and
+   `api/index.py` configure everything.
+3. In Vercel → **Storage** → **Marketplace** → install
+   [**Neon Postgres**](https://vercel.com/marketplace/neon). The
+   integration auto-creates a database, wires it to the project, and
+   injects `DATABASE_URL` (and the rest of the `PG*` variables) into
+   the deployment environment. No copy-paste needed.
+4. (Optional) Add `ABUSEIPDB_API_KEY` and `VIRUSTOTAL_API_KEY` under
+   **Settings → Environment Variables** if you want live threat-intel
+   lookups on Vercel. Without them, the dashboard renders but the
+   threat-intel panel stays empty.
+5. **Deploy**. The dashboard should be live at
+   `https://<project>.vercel.app` within ~60 seconds.
+
+**What runs on Vercel vs what doesn't:**
+
+| Component | Vercel | Local / Docker |
+| --- | --- | --- |
+| Flask dashboard (`/`, `/alerts`, `/api/health`, …) | ✅ | ✅ |
+| SQLite alerts DB | ❌ (read-only FS) | ✅ |
+| Postgres alerts DB (via Neon) | ✅ | optional |
+| Background monitoring service (`app/supervisor.py`) | ❌ (no long-lived threads in serverless) | ✅ |
+| Detector pipeline (`python main.py`) | ❌ | ✅ |
+
+The Vercel deployment is the **read-only dashboard** only. To run
+detection, run `python main.py` (batch) or `python -m app.supervisor`
+(real-time) on a Docker host, a VM, or any always-on environment, and
+let the same Neon DB feed the deployed dashboard.
+
 ---
 
 ## Usage

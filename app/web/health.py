@@ -16,7 +16,6 @@ The registry never raises; it returns JSON-safe dicts.
 from __future__ import annotations
 
 import os
-import sqlite3
 import threading
 import time
 from datetime import datetime, timezone
@@ -69,50 +68,23 @@ def mark_shutdown() -> None:
 
 
 def _check_db() -> dict[str, Any]:
-    """Open a short-lived SQLite connection and SELECT 1. Returns ok/error."""
+    """Open a short-lived connection (SQLite or Postgres) and SELECT 1.
+
+    Returns ok/error. Uses the unified health_check() helper from the
+    database module so the result includes the active backend
+    (sqlite | postgres) — useful in Vercel where the dashboard runs
+    on Postgres but operators may debug locally on SQLite.
+    """
     from database import db as alerts_db
 
-    path = Path(alerts_db.DB_PATH)
-    info: dict[str, Any] = {"path": str(path), "exists": path.exists(), "writable": False}
-    try:
-        conn = sqlite3.connect(str(path), timeout=2.0)
-        try:
-            cur = conn.execute("SELECT 1")
-            cur.fetchone()
-            info["ok"] = True
-        finally:
-            conn.close()
-        # Cheap writability probe: can we append an empty byte?
-        try:
-            with path.open("ab") as f:
-                pass
-            info["writable"] = True
-        except OSError as exc:
-            info["writable"] = False
-            info["write_error"] = str(exc)
-    except Exception as exc:  # noqa: BLE001
-        info["ok"] = False
-        info["error"] = f"{exc.__class__.__name__}: {exc}"
-    return info
+    return alerts_db.health_check()
 
 
 def _check_threat_intel_cache() -> dict[str, Any]:
-    """Check that the threat-intel cache SQLite file is reachable."""
+    """Check that the threat-intel cache backend is reachable."""
     from threat_intel import cache as ti_cache
 
-    path = Path(ti_cache._CACHE_PATH)  # noqa: SLF001
-    info: dict[str, Any] = {"path": str(path), "exists": path.exists()}
-    try:
-        conn = sqlite3.connect(str(path), timeout=2.0)
-        try:
-            conn.execute("SELECT 1").fetchone()
-            info["ok"] = True
-        finally:
-            conn.close()
-    except Exception as exc:  # noqa: BLE001
-        info["ok"] = False
-        info["error"] = f"{exc.__class__.__name__}: {exc}"
-    return info
+    return ti_cache.health_check()
 
 
 def _check_watcher_logs() -> dict[str, Any]:
