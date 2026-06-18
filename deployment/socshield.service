@@ -1,0 +1,21 @@
+[Unit]
+Description=SOCshield Docker Compose stack
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Set this to the absolute path of your checked-out repo (where docker-compose.yml lives)
+WorkingDirectory=/opt/socshield
+# Start the stack (build if necessary) and return so systemd considers the unit active
+ExecStart=/usr/bin/docker compose up -d --build
+ExecStop=/usr/bin/docker compose down
+RemainAfterExit=yes
+TimeoutStartSec=300
+TimeoutStopSec=300
+# Keep service marked failed on non-zero exit of ExecStart/Stop
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
