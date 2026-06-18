@@ -1,0 +1,62 @@
+# Byte-compiled / cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local virtualenvs
+.venv/
+venv/
+env/
+ENV/
+
+# Local-only entry points (Vercel uses vercel_app.py + api/index.py)
+main.py
+run_dashboard.py
+Dockerfile
+docker-compose.yml
+docker/
+
+# Local + test artifacts
+tests/
+logs/
+scripts/
+docs/
+demo/
+backups/
+tmp/
+*.tmp
+*.bak
+*.swp
+
+# Runtime / generated state — never deploy these
+database/*.db
+database/*.db-journal
+threat_intel/*.db
+threat_intel/*.db-journal
+reports/incidents/*
+reports/mitre_coverage.json
+reports/mitre_coverage.md
+
+# VCS + secrets
+.git/
+.gitignore
+.gitattributes
+.env
+.env.*
+.env.example
+.vercel/
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
