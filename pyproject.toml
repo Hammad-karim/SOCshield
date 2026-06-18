@@ -21,3 +21,11 @@ description = "SOCshield - Security Operations Center Shield (Flask dashboard fo
 requires-python = ">=3.12,<3.13"
 # No `dependencies` here — the build installs from `requirements.txt`.
 # Listing deps here would cause Vercel to run `uv lock` over them.
+
+# Tell Vercel exactly which module:variable is the entrypoint.
+# Vercel's auto-detector would otherwise try to parse `api/index.py`
+# as a FastAPI app and fail. Pointing it at `vercel_app:app` skips
+# the auto-detection and uses the Flask `app` re-exported by
+# `vercel_app.py` (which in turn imports from `api/index.py`).
+[tool.vercel]
+entrypoint = "vercel_app:app"
