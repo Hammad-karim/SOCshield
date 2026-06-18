@@ -1,8 +1,7 @@
 /* ===================================================================
    SOCshield — analyst UI
    Slate-and-steel surfaces, hairline borders, single amber accent.
-   No glow, no gradient blobs, no per-card rainbow stripe, no
-   hover-lift transitions, no decorative icons in card titles.
+   No hover-lift transitions, no decorative icons in card titles.
    =================================================================== */
 
 :root {

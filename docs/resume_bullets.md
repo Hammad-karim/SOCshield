@@ -200,9 +200,8 @@ narrative beats that show end-to-end ownership:
 5. **The dashboard.** "I designed it the way real SOC tooling looks:
    left sidebar, hairline borders, monospace for IPs / IDs /
    timestamps, severity as a 3px left border, not a fat colored
-   badge. I deliberately stripped out the AI-generated "glow
-   + rainbow stripe + pulsing dot" look."
-
+   badge. I deliberately stripped out all decorative "glow" and
+   rainbow-stripe elements for a cleaner, professional look."
 6. **Production engineering.** "One Docker container, one process,
    one supervisor that runs the monitoring service in a background
    thread and the dashboard in the foreground. Non-root,
