@@ -38,6 +38,11 @@ os.environ.setdefault("SOCSHIELD_TI_CACHE_PATH", "/tmp/socshield/threat_intel_ca
 os.environ.setdefault("SOCSHIELD_REPORTS_DIR", "/tmp/socshield/reports")
 os.environ.setdefault("SOCSHIELD_LOGS_DIR", "/tmp/socshield/logs")
 
+# Enable demo mode on Vercel (serverless = no persistent storage)
+# Vercel environment variable is set by Vercel platform automatically
+if os.environ.get("VERCEL_ENV") in ("production", "preview", "development"):
+    os.environ.setdefault("SOCSHIELD_DEMO_MODE", "1")
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s")
 logger = logging.getLogger("socshield.vercel")
 

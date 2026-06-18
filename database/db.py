@@ -272,7 +272,28 @@ def get_all_alerts() -> list[Any]:
         else:
             cur = conn.execute(sql)
             rows = [dict(r) for r in cur.fetchall()]
-    return [Alert.from_row(r) for r in rows]
+    
+    alerts = [Alert.from_row(r) for r in rows]
+    
+    # Demo mode: if no alerts and DEMO_MODE is enabled, return demo alerts
+    if not alerts and os.environ.get("SOCSHIELD_DEMO_MODE") == "1":
+        try:
+            seed_demo_alerts()
+            # Retry the query
+            with _connect() as conn:
+                if DB_BACKEND == "postgres":
+                    import psycopg2.extras
+                    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                        cur.execute(sql)
+                        rows = _fetch_all_dicts(cur)
+                else:
+                    cur = conn.execute(sql)
+                    rows = [dict(r) for r in cur.fetchall()]
+            alerts = [Alert.from_row(r) for r in rows]
+        except Exception:
+            pass  # Fall through; return empty list
+    
+    return alerts
 
 
 def get_alerts_by_ip(ip: str) -> list[Any]:
