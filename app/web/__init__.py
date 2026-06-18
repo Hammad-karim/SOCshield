@@ -72,6 +72,11 @@ def create_app() -> Flask:
         from threat_intel import cache as ti_cache
         alerts_db.init_db()
         ti_cache.init_cache()
+        # Seed demo alerts if database is empty (for Vercel serverless deployment)
+        try:
+            alerts_db.seed_demo_alerts()
+        except Exception:
+            logger.debug("demo seeding skipped or failed", exc_info=True)
     except Exception:  # noqa: BLE001
         logger.exception("failed to initialize data stores on app startup")
 
