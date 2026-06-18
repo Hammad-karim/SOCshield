@@ -423,49 +423,52 @@ def seed_demo_alerts() -> int:
         pass  # Fall through to insert anyway
     
     from datetime import datetime, timedelta
+    from app.models import Alert
     
-    demo_alerts = [
+    demo_alerts_data = [
         # Brute force attempts (14)
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=120)).isoformat(sep=" ", timespec="seconds"), "source_ip": "185.220.101.45", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=119)).isoformat(sep=" ", timespec="seconds"), "source_ip": "45.142.66.12", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=118)).isoformat(sep=" ", timespec="seconds"), "source_ip": "4.4.4.4", "detector": "BRUTE_FORCE", "severity": "CRITICAL", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=117)).isoformat(sep=" ", timespec="seconds"), "source_ip": "185.220.101.45", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=116)).isoformat(sep=" ", timespec="seconds"), "source_ip": "10.0.0.5", "detector": "BRUTE_FORCE", "severity": "MEDIUM", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=115)).isoformat(sep=" ", timespec="seconds"), "source_ip": "4.4.4.4", "detector": "BRUTE_FORCE", "severity": "CRITICAL", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=114)).isoformat(sep=" ", timespec="seconds"), "source_ip": "45.142.66.12", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=113)).isoformat(sep=" ", timespec="seconds"), "source_ip": "185.220.101.45", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=112)).isoformat(sep=" ", timespec="seconds"), "source_ip": "10.0.0.12", "detector": "BRUTE_FORCE", "severity": "MEDIUM", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=111)).isoformat(sep=" ", timespec="seconds"), "source_ip": "45.142.66.12", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=110)).isoformat(sep=" ", timespec="seconds"), "source_ip": "185.220.101.45", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=109)).isoformat(sep=" ", timespec="seconds"), "source_ip": "10.0.0.20", "detector": "BRUTE_FORCE", "severity": "MEDIUM", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=108)).isoformat(sep=" ", timespec="seconds"), "source_ip": "45.142.66.12", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=107)).isoformat(sep=" ", timespec="seconds"), "source_ip": "4.4.4.4", "detector": "BRUTE_FORCE", "severity": "CRITICAL", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=120), "source_ip": "185.220.101.45", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=119), "source_ip": "45.142.66.12", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=118), "source_ip": "4.4.4.4", "detector": "BRUTE_FORCE", "severity": "CRITICAL", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=117), "source_ip": "185.220.101.45", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=116), "source_ip": "10.0.0.5", "detector": "BRUTE_FORCE", "severity": "MEDIUM", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=115), "source_ip": "4.4.4.4", "detector": "BRUTE_FORCE", "severity": "CRITICAL", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=114), "source_ip": "45.142.66.12", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=113), "source_ip": "185.220.101.45", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=112), "source_ip": "10.0.0.12", "detector": "BRUTE_FORCE", "severity": "MEDIUM", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=111), "source_ip": "45.142.66.12", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=110), "source_ip": "185.220.101.45", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=109), "source_ip": "10.0.0.20", "detector": "BRUTE_FORCE", "severity": "MEDIUM", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=108), "source_ip": "45.142.66.12", "detector": "BRUTE_FORCE", "severity": "HIGH", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=107), "source_ip": "4.4.4.4", "detector": "BRUTE_FORCE", "severity": "CRITICAL", "title": "SSH Brute Force Attempt", "description": "Multiple failed SSH login attempts detected."},
         # Port scans (5)
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=100)).isoformat(sep=" ", timespec="seconds"), "source_ip": "103.45.211.7", "detector": "PORT_SCAN", "severity": "MEDIUM", "title": "Network Port Scan Detected", "description": "Probing of multiple ports detected from source IP."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=99)).isoformat(sep=" ", timespec="seconds"), "source_ip": "91.224.92.18", "detector": "PORT_SCAN", "severity": "MEDIUM", "title": "Network Port Scan Detected", "description": "Probing of multiple ports detected from source IP."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=98)).isoformat(sep=" ", timespec="seconds"), "source_ip": "203.0.113.77", "detector": "PORT_SCAN", "severity": "MEDIUM", "title": "Network Port Scan Detected", "description": "Probing of multiple ports detected from source IP."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=97)).isoformat(sep=" ", timespec="seconds"), "source_ip": "185.220.101.45", "detector": "PORT_SCAN", "severity": "MEDIUM", "title": "Network Port Scan Detected", "description": "Probing of multiple ports detected from source IP."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=96)).isoformat(sep=" ", timespec="seconds"), "source_ip": "192.168.1.25", "detector": "PORT_SCAN", "severity": "MEDIUM", "title": "Network Port Scan Detected", "description": "Probing of multiple ports detected from source IP."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=100), "source_ip": "103.45.211.7", "detector": "PORT_SCAN", "severity": "MEDIUM", "title": "Network Port Scan Detected", "description": "Probing of multiple ports detected from source IP."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=99), "source_ip": "91.224.92.18", "detector": "PORT_SCAN", "severity": "MEDIUM", "title": "Network Port Scan Detected", "description": "Probing of multiple ports detected from source IP."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=98), "source_ip": "203.0.113.77", "detector": "PORT_SCAN", "severity": "MEDIUM", "title": "Network Port Scan Detected", "description": "Probing of multiple ports detected from source IP."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=97), "source_ip": "185.220.101.45", "detector": "PORT_SCAN", "severity": "MEDIUM", "title": "Network Port Scan Detected", "description": "Probing of multiple ports detected from source IP."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=96), "source_ip": "192.168.1.25", "detector": "PORT_SCAN", "severity": "MEDIUM", "title": "Network Port Scan Detected", "description": "Probing of multiple ports detected from source IP."},
         # Privilege escalation (11)
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=80)).isoformat(sep=" ", timespec="seconds"), "source_ip": "10.0.0.5", "detector": "PRIV_ESC", "severity": "CRITICAL", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=79)).isoformat(sep=" ", timespec="seconds"), "source_ip": "4.4.4.4", "detector": "PRIV_ESC", "severity": "HIGH", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=78)).isoformat(sep=" ", timespec="seconds"), "source_ip": "45.142.66.12", "detector": "PRIV_ESC", "severity": "HIGH", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=77)).isoformat(sep=" ", timespec="seconds"), "source_ip": "185.220.101.45", "detector": "PRIV_ESC", "severity": "HIGH", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=76)).isoformat(sep=" ", timespec="seconds"), "source_ip": "10.0.0.5", "detector": "PRIV_ESC", "severity": "HIGH", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=75)).isoformat(sep=" ", timespec="seconds"), "source_ip": "4.4.4.4", "detector": "PRIV_ESC", "severity": "HIGH", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=74)).isoformat(sep=" ", timespec="seconds"), "source_ip": "103.45.211.7", "detector": "PRIV_ESC", "severity": "MEDIUM", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=73)).isoformat(sep=" ", timespec="seconds"), "source_ip": "91.224.92.18", "detector": "PRIV_ESC", "severity": "MEDIUM", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=72)).isoformat(sep=" ", timespec="seconds"), "source_ip": "203.0.113.77", "detector": "PRIV_ESC", "severity": "MEDIUM", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=71)).isoformat(sep=" ", timespec="seconds"), "source_ip": "192.168.1.25", "detector": "PRIV_ESC", "severity": "MEDIUM", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
-        {"timestamp": (datetime.utcnow() - timedelta(minutes=70)).isoformat(sep=" ", timespec="seconds"), "source_ip": "10.0.0.12", "detector": "PRIV_ESC", "severity": "MEDIUM", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=80), "source_ip": "10.0.0.5", "detector": "PRIV_ESC", "severity": "CRITICAL", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=79), "source_ip": "4.4.4.4", "detector": "PRIV_ESC", "severity": "HIGH", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=78), "source_ip": "45.142.66.12", "detector": "PRIV_ESC", "severity": "HIGH", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=77), "source_ip": "185.220.101.45", "detector": "PRIV_ESC", "severity": "HIGH", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=76), "source_ip": "10.0.0.5", "detector": "PRIV_ESC", "severity": "HIGH", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=75), "source_ip": "4.4.4.4", "detector": "PRIV_ESC", "severity": "HIGH", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=74), "source_ip": "103.45.211.7", "detector": "PRIV_ESC", "severity": "MEDIUM", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=73), "source_ip": "91.224.92.18", "detector": "PRIV_ESC", "severity": "MEDIUM", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=72), "source_ip": "203.0.113.77", "detector": "PRIV_ESC", "severity": "MEDIUM", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=71), "source_ip": "192.168.1.25", "detector": "PRIV_ESC", "severity": "MEDIUM", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
+        {"timestamp": datetime.utcnow() - timedelta(minutes=70), "source_ip": "10.0.0.12", "detector": "PRIV_ESC", "severity": "MEDIUM", "title": "Privilege Escalation Detected", "description": "Unusual privilege escalation pattern detected."},
     ]
     
     inserted = 0
-    for alert in demo_alerts:
+    for data in demo_alerts_data:
         try:
-            save_alert(type("Alert", (), alert)())
+            alert = Alert(**data)
+            save_alert(alert)
             inserted += 1
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Failed to seed alert: {e}")
             pass
     
     logger.info(f"Seeded {inserted} demo alerts")
